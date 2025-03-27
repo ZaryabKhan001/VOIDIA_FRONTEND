@@ -162,7 +162,7 @@ const BlogPage = () => {
                       </Button>
                     </div>
                   )}
-                  <div className="overflow-hidden">
+                  <div className="overflow-hidden h-[60vh] w-full">
                     <img
                       src={data[0]?.coverImage}
                       alt={data[0]?.title}
