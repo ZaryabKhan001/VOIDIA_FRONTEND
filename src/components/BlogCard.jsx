@@ -21,7 +21,7 @@ const BlogCard = ({ blog }) => {
           {blog?.title}
         </h1>
         <div className="flex flex-col sm:flex-row items-start gap-0 w-full justify-between sm:items-center sm:gap-2">
-          <p className="text-md font-bold w-full truncate overflow-hidden whitespace-nowrap text-ellipsis">
+          <p className="text-md font-bold w-full sm:w-[30%] truncate overflow-hidden whitespace-nowrap text-ellipsis">
             {blog?.createdBy?.name}
           </p>
           <p className="text-sm">{formatDate(blog?.createdAt)}</p>
