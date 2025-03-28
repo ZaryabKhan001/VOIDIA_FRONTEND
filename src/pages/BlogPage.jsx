@@ -236,9 +236,13 @@ const BlogPage = () => {
                       {commentSendingError}
                     </p>
                   )}
-                  {comments.map((comment, index) => {
-                    return <CommentBox comment={comment} key={index} />;
-                  })}
+                  {comments.length === 0 ? (
+                    <p className="text-sm">No Comments yet.</p>
+                  ) : (
+                    comments.map((comment, index) => {
+                      return <CommentBox comment={comment} key={index} />;
+                    })
+                  )}
                 </div>
               </div>
             </div>
