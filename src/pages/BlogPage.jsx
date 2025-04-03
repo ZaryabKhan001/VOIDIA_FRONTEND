@@ -14,6 +14,17 @@ import { Input } from "../components/ui/input.jsx";
 import { Loader2, ThumbsUp, ThumbsDownIcon } from "lucide-react";
 import { toast } from "sonner";
 import { axiosInstance } from "../lib/axios.js";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const BlogPage = () => {
   const [commentMessage, setCommentMessage] = useState("");
@@ -149,17 +160,45 @@ const BlogPage = () => {
                       >
                         Update
                       </Button>
-                      <Button
-                        variant={"outline"}
-                        className={"cursor-pointer"}
-                        onClick={() => handleDelete()}
-                      >
-                        {deleteLoading ? (
-                          <Loader2 className="animate-spin" />
-                        ) : (
-                          "Delete"
-                        )}
-                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger>
+                          {" "}
+                          <Button
+                            variant={"outline"}
+                            className={"cursor-pointer"}
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete your blog and remove blog data
+                              from our servers.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="cursor-pointer">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete()}
+                              className="cursor-pointer"
+                            >
+                              {deleteLoading ? (
+                                <Loader2 className="animate-spin" />
+                              ) : (
+                                "Confirm"
+                              )}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   )}
                   <div className="overflow-hidden h-[60vh] w-full">
