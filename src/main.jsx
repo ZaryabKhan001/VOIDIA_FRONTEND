@@ -10,7 +10,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 
-import { CheckAuthentication, ProtectedRoute } from "./components/index.js";
+import { ProtectedRoute } from "./components/index.js";
 import { PersistGate } from "redux-persist/integration/react";
 
 import store, { persistor } from "./store/store.js";
@@ -30,49 +30,21 @@ const NotFoundPage = lazy(() => import("./pages/NotFoundPage.jsx"));
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
+      // for all
       <Route path="" element={<HomePage />} />
-      <Route
-        path="signup"
-        element={
-          <CheckAuthentication>
-            <SignUpPage />
-          </CheckAuthentication>
-        }
-      />
-      <Route
-        path="login"
-        element={
-          <CheckAuthentication>
-            <LoginPage />
-          </CheckAuthentication>
-        }
-      />
-      <Route
-        path="/blog/add-new"
-        element={
-          <ProtectedRoute>
-            <AddNewBlogPage />
-          </ProtectedRoute>
-        }
-      />
       <Route path="blog/:id" element={<BlogPage />} />
-      <Route
-        path="blog/update/:id"
-        element={
-          <ProtectedRoute>
-            <UpdatedBlogPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="profile"
-        element={
-          <ProtectedRoute>
-            <UserProfilePage />
-          </ProtectedRoute>
-        }
-      />
       <Route path="*" element={<NotFoundPage />} />
+      // only for unAuthorized
+      <Route element={<ProtectedRoute isPublic={true} />}>
+        <Route path="signup" element={<SignUpPage />} />
+        <Route path="login" element={<LoginPage />} />
+      </Route>
+      // only for Authorized
+      <Route element={<ProtectedRoute />}>
+        <Route path="/blog/add-new" element={<AddNewBlogPage />} />
+        <Route path="blog/update/:id" element={<UpdatedBlogPage />} />
+        <Route path="profile" element={<UserProfilePage />} />
+      </Route>
     </Route>
   )
 );

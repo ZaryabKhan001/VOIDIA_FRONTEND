@@ -1,4 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
+import {
+  signup,
+  login,
+  verifyEmail,
+  logoutUser,
+  forgotPassword,
+  resetPassword,
+  checkAuth,
+} from "./authThunks";
 
 const initialState = {
   user: {
@@ -10,6 +19,8 @@ const initialState = {
     dislikedPosts: [],
   },
   status: false,
+  loading: false,
+  error: null,
 };
 
 const userSlice = createSlice({
@@ -29,8 +40,8 @@ const userSlice = createSlice({
       };
       state.status = true;
     },
-
     logout: (state) => {
+      localStorage.removeItem("token");
       state.user = {
         _id: "",
         name: "",
@@ -41,7 +52,6 @@ const userSlice = createSlice({
       };
       state.status = false;
     },
-
     toggleLike: (state, action) => {
       const postId = action.payload;
       if (state.user.likedPosts.includes(postId)) {
@@ -55,7 +65,6 @@ const userSlice = createSlice({
         );
       }
     },
-
     toggleDislike: (state, action) => {
       const postId = action.payload;
       if (state.user.dislikedPosts.includes(postId)) {
@@ -69,6 +78,54 @@ const userSlice = createSlice({
         );
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(signup.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(signup.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(signup.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(login.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.user = action.payload.data;
+        state.status = true;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(checkAuth.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.status = true;
+      })
+      .addCase(checkAuth.rejected, (state) => {
+        state.user = initialState.user;
+        state.status = false;
+      })
+
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = initialState.user;
+        state.status = false;
+      })
+
+      .addCase(verifyEmail.fulfilled, (state, action) => {
+        state.user.isVerified = true;
+      });
   },
 });
 

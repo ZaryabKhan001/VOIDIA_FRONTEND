@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
-import userReducer from "../features/user/userSlice.js";
+import userReducer from "../features/auth/authSlice.js";
+import blogReducer from "../features/blog/blogSlice.js"; // import the blog reducer
 import {
   persistStore,
   persistReducer,
@@ -22,6 +23,7 @@ const persistedUserReducer = persistReducer(persistConfig, userReducer);
 const store = configureStore({
   reducer: {
     user: persistedUserReducer,
+    blog: blogReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

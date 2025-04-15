@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "./ui/button.jsx";
 import { Link, useNavigate } from "react-router-dom";
-import { selectUserStatus, logout } from "../features/user/userSlice.js";
+import { selectUserStatus, logout } from "../features/auth/authSlice.js";
 import { useSelector, useDispatch } from "react-redux";
 import { axiosInstance } from "../lib/axios.js";
 import { toast } from "sonner";

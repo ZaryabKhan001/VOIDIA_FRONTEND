@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
 import { signInSchema } from "../schemas/signIn.Schema.js";
 import { Input } from "../components/ui/input.jsx";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../components/ui/button.jsx";
 import { Loader2 } from "lucide-react";
-import { axiosInstance } from "../lib/axios.js";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { setUser } from "../features/user/userSlice.js";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { login } from "../features/auth/authThunks.js";
+import { setUser } from "../features/auth/authSlice.js";
 
 const LoginPage = () => {
   const {
@@ -19,35 +19,24 @@ const LoginPage = () => {
     formState: { errors, isValid },
   } = useForm({ resolver: zodResolver(signInSchema), mode: "onChange" });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const { loading, error } = useSelector((state) => state.user);
+
   const handleLogin = async (data) => {
-    setIsLoading(true);
-    setError("");
     try {
-      const response = await axiosInstance.post("/auth/login", data);
-      if (!response) {
-        console.log("Error in Login user");
+      const result = await dispatch(login(data));
+
+      if (login.fulfilled.match(result)) {
+        dispatch(setUser(result.payload.data));
+        toast("User Login Successfully");
+        navigate("/");
+      } else {
+        console.log("Login failed:", result.payload);
       }
-      console.log(response.data);
-      dispatch(
-        setUser({
-          _id: response.data.data._id,
-          name: response.data.data.name,
-          email: response.data.data.email,
-          isVerified: response.data.data.isVerified,
-        })
-      );
-      toast("User Login Successfully");
-      navigate("/");
     } catch (error) {
       console.log("Error in Login User", error);
-      setError(error.response.data.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -82,9 +71,9 @@ const LoginPage = () => {
         <Button
           className={"cursor-pointer my-5"}
           type="submit"
-          disabled={!isValid || isLoading}
+          disabled={!isValid || loading}
         >
-          {isLoading ? <Loader2 className="animate-spin" /> : "Login"}
+          {loading ? <Loader2 className="animate-spin" /> : "Login"}
         </Button>
         <p className="text-sm">
           Don't have an account?{" "}

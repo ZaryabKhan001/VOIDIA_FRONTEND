@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import useFetch from "../hooks/useFetch.js";
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthorInfoCard, CommentBox } from "../components/index.js";
 import { formatDate } from "../lib/formatDate.js";
@@ -9,11 +8,10 @@ import {
   selectUser,
   toggleDislike,
   toggleLike,
-} from "../features/user/userSlice.js";
+} from "../features/auth/authSlice.js";
 import { Input } from "../components/ui/input.jsx";
 import { Loader2, ThumbsUp, ThumbsDownIcon } from "lucide-react";
 import { toast } from "sonner";
-import { axiosInstance } from "../lib/axios.js";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,51 +23,68 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  deleteBlog,
+  addComment,
+  getAllComments,
+  reactToBlog,
+  getBlogDetails,
+} from "../features/blog/blogThunks.js";
 
 const BlogPage = () => {
   const [commentMessage, setCommentMessage] = useState("");
-  const [isCommentSending, setIsCommentSending] = useState(false);
-  const [commentSendingError, setCommentSendingError] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { data, isLoading, refetchData } = useFetch(`/posts/blog/${id}`);
-  const { data: comments, refetchData: refetchComments } = useFetch(
-    `/posts/${id}/comments`
+  const data = useSelector((state) => state.blog.blogDetails);
+  const loading = useSelector((state) => state.blog.loading.blogDetails);
+  const deleteLoading = useSelector((state) => state.blog.error.deleteBlog);
+  const comments = useSelector((state) => state.blog.comments);
+  const isCommentSending = useSelector(
+    (state) => state.blog.loading.addComment
+  );
+  const commentSendingError = useSelector(
+    (state) => state.blog.error.addComment
   );
 
   const user = useSelector(selectUser);
-  const isLiked = user.likedPosts.includes(id);
-  const isDisliked = user.dislikedPosts.includes(id);
+  const isLiked = user.likedPosts?.includes(id);
+  const isDisliked = user.dislikedPosts?.includes(id);
+  const [likes, setLikes] = useState(data?.likes);
+  const [dislikes, setDisLikes] = useState(data?.disLikes);
+
+  const fetchBlogDetails = async () => {
+    try {
+      const result = await dispatch(getBlogDetails(id));
+      if (getBlogDetails.fulfilled.match(result)) {
+        console.log("Blog Details fetched successfully");
+      }
+    } catch (error) {
+      console.log("Error in fetching blog details", error);
+    }
+  };
 
   const handleDelete = async () => {
-    setDeleteLoading(true);
     try {
-      const response = await axiosInstance.delete(`/posts/${id}`);
-      if (!response) {
-        console.log("Error in deleting Blog");
-        return;
+      const result = await dispatch(deleteBlog(id));
+      if (deleteBlog.fulfilled.match(result)) {
+        console.log("Blog deleted Successfully");
+        toast("Blog deleted successfully");
       }
-      toast("Blog deleted successfully");
       navigate("/");
     } catch (error) {
       console.log("Error in deleting Blog", error);
-    } finally {
-      setDeleteLoading(false);
     }
   };
 
   const fetchComments = async () => {
     try {
-      const response = await axiosInstance.get(`/posts/${id}/comments`);
-      if (!response) {
-        console.log("Error in fetching Blog Comments");
-        return;
+      const result = await dispatch(getAllComments(id));
+      if (getAllComments.fulfilled.match(result)) {
+        console.log("Blog Comments fetched successfully");
       }
-      refetchComments();
     } catch (error) {
       console.log("Error in fetching Blog Comments", error);
     }
@@ -78,85 +93,74 @@ const BlogPage = () => {
   const handleAddingComment = async (e) => {
     e.preventDefault();
     try {
-      setIsCommentSending(true);
-      setCommentSendingError("");
-      const response = await axiosInstance.post(`/posts/${id}/comments`, {
-        content: commentMessage,
-      });
-      if (!response) {
-        console.log("Error in adding comment");
-        return;
+      const result = await dispatch(addComment({ id, commentMessage }));
+      if (addComment.fulfilled.match(result)) {
+        console.log("Comment added successfully");
       }
 
       fetchComments();
     } catch (error) {
       console.log("Error in adding comment", error);
-      setCommentSendingError(error.response.data.message);
     } finally {
       setCommentMessage("");
-      setIsCommentSending(false);
     }
   };
 
-  const handleLike = async () => {
+  const handleReaction = async (type) => {
     try {
-      const response = await axiosInstance.patch(`/posts/${id}/like`);
-      if (!response) {
-        console.log("Error in Liking Post");
-        return;
+      const response = await dispatch(
+        reactToBlog({ blogId: id, reaction: type })
+      );
+      if (type === "like") {
+        dispatch(toggleLike(id));
       }
-      dispatch(toggleLike(id));
-    } catch (error) {
-      console.log("Error in Liking Post", error);
-    }
-  };
-
-  const handleDisLike = async () => {
-    try {
-      const response = await axiosInstance.patch(`/posts/${id}/dislike`);
-      if (!response) {
-        console.log("Error in DisLiking Post");
-        return;
+      if (type === "dislike") {
+        dispatch(toggleDislike(id));
       }
-      dispatch(toggleDislike(id));
     } catch (error) {
-      console.log("Error in DisLiking Post", error);
+      console.error("Error in reaction:", error);
     }
   };
 
   useEffect(() => {
-    refetchData();
-  }, [isLiked, isDisliked]);
+    fetchBlogDetails();
+    fetchComments();
+  }, []);
+
+  useEffect(() => {
+    setLikes(data?.likes);
+    setDisLikes(data?.disLikes);
+  }, [data]);
 
   return (
     <div className="my-10">
-      {isLoading ? (
+      {loading ? (
         <div className="min-h-[calc(100vh-(18vh+10.2rem))] sm:min-h-[calc(100vh-(15vh+9.3rem))] flex justify-center items-center">
           <Loader2 className="animate-spin" />
         </div>
       ) : (
-        data[0] &&
+        data &&
         comments && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <div className="md:col-span-2 lg:col-span-3">
               <div>
                 <div className="flex flex-col justify-center items-start gap-3 border border-slate-200 p-4 rounded-md">
                   <h1 className="text-2xl font-bold text-center capitalize">
-                    {data[0]?.title}
+                    {data?.title}
                   </h1>
-                  <p className="text-sm">{formatDate(data[0]?.createdAt)}</p>
+                  <p className="text-sm">{formatDate(data?.createdAt)}</p>
                   <p className="font-bold">
                     By:{" "}
                     <span className="font-normal capitalize">
-                      {data[0]?.createdBy?.name}
+                      {data?.createdBy?.name}
                     </span>
                   </p>
-                  {user?._id === data[0]?.createdBy?._id && (
+                  {user?._id === data?.createdBy?._id && (
                     <div className="flex justify-between items-center gap-3">
                       <Button
                         variant={"outline"}
                         className={"cursor-pointer"}
-                        onClick={() => navigate(`/blog/update/${data[0]?._id}`)}
+                        onClick={() => navigate(`/blog/update/${data?._id}`)}
                       >
                         Update
                       </Button>
@@ -203,14 +207,14 @@ const BlogPage = () => {
                   )}
                   <div className="overflow-hidden h-[60vh] w-full">
                     <img
-                      src={data[0]?.coverImage}
-                      alt={data[0]?.title}
+                      src={data?.coverImage}
+                      alt={data?.title}
                       loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <h1 className="text-lg font-bold">Content</h1>
-                  <p className="text-sm">{data[0]?.content}</p>
+                  <p className="text-sm">{data?.content}</p>
                 </div>
 
                 {/* like  scenario  */}
@@ -223,18 +227,18 @@ const BlogPage = () => {
                           className={`cursor-pointer ${
                             isLiked && "text-green-500"
                           }`}
-                          onClick={() => handleLike()}
+                          onClick={() => handleReaction("like")}
                         />
-                        <p className="text-sm">{data[0].likes}</p>
+                        <p className="text-sm">{Number(likes)}</p>
                       </div>
                       <div className="flex flex-col justify-between items-center gap-2">
                         <ThumbsDownIcon
                           className={`cursor-pointer ${
                             isDisliked && "text-red-500"
                           }`}
-                          onClick={() => handleDisLike()}
+                          onClick={() => handleReaction("dislike")}
                         />
-                        <p className="text-sm">{data[0].disLikes}</p>
+                        <p className="text-sm">{Number(dislikes)}</p>
                       </div>
                     </div>
                   </div>
@@ -286,7 +290,7 @@ const BlogPage = () => {
               </div>
             </div>
             <div>
-              <AuthorInfoCard author={data[0]?.createdBy} />
+              <AuthorInfoCard author={data?.createdBy} />
             </div>
           </div>
         )

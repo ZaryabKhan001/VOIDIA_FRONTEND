@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../components/ui/button.jsx";
 import { Loader2 } from "lucide-react";
-import { axiosInstance } from "../lib/axios.js";
 import { toast } from "sonner";
 import { Textarea } from "../components/ui/textarea.jsx";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { addNew } from "../features/blog/blogThunks.js";
 
 const AddNewBlogPage = () => {
   const {
@@ -17,41 +18,32 @@ const AddNewBlogPage = () => {
     formState: { errors, isValid },
   } = useForm({ resolver: zodResolver(blogSchema), mode: "onChange" });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const loading = useSelector((state) => state.blog.loading.addBlog);
+  const error = useSelector((state) => state.blog.error.addBlog);
 
   const handleAddingPost = async (data) => {
-    setIsLoading(true);
-    setError("");
     try {
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("content", data.content);
-      formData.append("coverImage", data.coverImage[0]); // Extract File from FileList
+      formData.append("coverImage", data.coverImage[0]);
 
-      const response = await axiosInstance.post("/posts", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const result = await dispatch(addNew(formData));
 
-      if (!response) {
-        console.error("Error uploading blog");
-        return;
+      if (addNew.fulfilled.match(result)) {
+        console.log("Blog uploaded successfully", result);
+        toast("Blog Added Successfully");
       }
 
-      console.log("Blog uploaded successfully", response.data);
-      toast("Blog Added Successfully");
       navigate("/");
     } catch (error) {
       console.error(
         "Error uploading blog",
         error.response?.data.message || error.message
       );
-      setError(error.response.data.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -107,9 +99,9 @@ const AddNewBlogPage = () => {
         <Button
           className={"cursor-pointer"}
           type="submit"
-          disabled={!isValid || isLoading}
+          disabled={!isValid || loading}
         >
-          {isLoading ? <Loader2 className="animate-spin" /> : "Submit"}
+          {loading ? <Loader2 className="animate-spin" /> : "Submit"}
         </Button>
       </form>
     </div>

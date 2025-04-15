@@ -5,9 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../components/ui/button.jsx";
 import { Loader2 } from "lucide-react";
-import { axiosInstance } from "../lib/axios.js";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { signup } from "../features/auth/authThunks.js";
 import { Link } from "react-router-dom";
 
 const SignUpPage = () => {
@@ -17,25 +18,22 @@ const SignUpPage = () => {
     formState: { errors, isValid },
   } = useForm({ resolver: zodResolver(signUpSchema), mode: "onChange" });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { loading, error } = useSelector((state) => state.user);
 
   const handleRegister = async (data) => {
-    setIsLoading(true);
-    setError("");
     try {
-      const response = await axiosInstance.post("/auth/signup", data);
-      if (!response) {
+      const result = await dispatch(signup(data));
+      if (!signup.fulfilled.match(result)) {
         console.log("Error in registering user");
+        return;
       }
       toast("User Registerd Successfully");
       navigate("/login");
     } catch (error) {
       console.log("Error in registering User", error);
-      setError(error.response.data.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -76,9 +74,9 @@ const SignUpPage = () => {
         <Button
           className={"cursor-pointer my-5"}
           type="submit"
-          disabled={!isValid || isLoading}
+          disabled={!isValid || loading}
         >
-          {isLoading ? <Loader2 className="animate-spin" /> : "Register"}
+          {loading ? <Loader2 className="animate-spin" /> : "Register"}
         </Button>
         <p className="tet-sm">
           Already have an account?{" "}

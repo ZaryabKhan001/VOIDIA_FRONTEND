@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { axiosInstance } from "../lib/axios.js";
 import { blogSchema } from "../schemas/blog.schema.js";
 import { Input } from "../components/ui/input.jsx";
 import { useForm } from "react-hook-form";
@@ -11,24 +10,27 @@ import { toast } from "sonner";
 import { Textarea } from "../components/ui/textarea.jsx";
 import { useNavigate } from "react-router-dom";
 import { Camera } from "lucide-react";
+import { updateBlog, getBlogDetails } from "../features/blog/blogThunks.js";
+import { useDispatch, useSelector } from "react-redux";
 
 const UpdateBlogPage = () => {
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({ resolver: zodResolver(blogSchema), mode: "onChange" });
 
   const [file, setFile] = useState(null);
   const [blogData, setBlogData] = useState({});
   const [imageUrl, setImageUrl] = useState("");
-  const [loader, setLoader] = useState(false);
   const [pageLoader, setPageLoader] = useState(true);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const { id } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const error = useSelector((state) => state.blog.error.updateBlog);
+  const loading = useSelector((state) => state.blog.loading.updateBlog);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -40,8 +42,6 @@ const UpdateBlogPage = () => {
   };
 
   const handleUpdate = async (data) => {
-    setLoader(true);
-    setError("");
     const formData = new FormData();
 
     formData.append("title", data.title);
@@ -54,44 +54,34 @@ const UpdateBlogPage = () => {
     }
 
     try {
-      const response = await axiosInstance.put(`/posts/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const result = await dispatch(updateBlog({ blogId: id, data: formData }));
 
-      if (!response) {
-        console.log("Error in Blog Updation.");
-        return;
+      if (updateBlog.fulfilled.match(result)) {
+        toast("Blog Updated Successfully");
+        navigate("/");
       }
-
-      toast("Blog Updated Successfully");
-      navigate("/");
     } catch (error) {
       toast("Blog Updation Failed");
       console.error("Blog Updation Error:", error);
-      setError(error.response?.data?.message || "An error occurred");
-    } finally {
-      setLoader(false);
     }
   };
 
   const fetchBlogData = async () => {
     setPageLoader(true);
     try {
-      const response = await axiosInstance.get(`/posts/blog/${id}`);
-      if (!response) {
-        console.log("Error in fetching Blog Details");
-        return;
+      const result = await dispatch(getBlogDetails(id));
+      if (getBlogDetails.fulfilled.match(result)) {
+        console.log("Blog Details fetched successfully");
+        const blogData = result.payload;
+        setBlogData(blogData);
+        setImageUrl(blogData.coverImage);
+
+        reset({
+          title: blogData.title || "",
+          content: blogData.content || "",
+          coverImage: blogData?.coverImage ? blogData?.coverImage : "",
+        });
       }
-
-      const blogData = response.data.data[0];
-      setBlogData(blogData);
-      setImageUrl(blogData.coverImage);
-
-      reset({
-        title: blogData.title || "",
-        content: blogData.content || "",
-        coverImage: blogData?.coverImage ? blogData?.coverImage : "",
-      });
     } catch (error) {
       console.log("Error in fetching Blog Details", error);
     } finally {
@@ -177,9 +167,9 @@ const UpdateBlogPage = () => {
             <Button
               className={"cursor-pointer"}
               type="submit"
-              disabled={loader}
+              disabled={loading || !isValid}
             >
-              {loader ? <Loader2 className="animate-spin" /> : "Update"}
+              {loading ? <Loader2 className="animate-spin" /> : "Update"}
             </Button>
           </form>
         </div>
