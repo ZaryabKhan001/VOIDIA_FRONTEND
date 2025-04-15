@@ -44,40 +44,44 @@ const LoginPage = () => {
     <div className="min-w-full min-h-screen flex justify-center items-center">
       <form
         onSubmit={handleSubmit(handleLogin)}
-        className="p-4 rounded-md border border-slate-200 w-full sm:w-fit"
+        className="p-5 rounded-md border border-slate-300 w-full sm:w-fit"
       >
-        <h1 className="my-4 text-xl font-bold">SignIn</h1>
-        <div className="w-full sm:w-[25rem] my-5">
+        <h1 className="mb-5 text-2xl font-bold">SignIn</h1>
+        <div className="w-full sm:w-[22rem] my-5">
           <Input
             placeholder="Enter Email"
             {...register("email")}
             type={"email"}
+            className={"rounded-sm h-[2.5rem]"}
           />
           {errors?.email && (
             <p className="text-sm text-red-500">{errors?.email?.message}</p>
           )}
         </div>
-        <div className="w-full sm:w-[25rem]">
+        <div className="w-full sm:w-[22rem]">
           <Input
             placeholder="Enter Password"
             {...register("password")}
             type={"password"}
+            className={"rounded-sm h-[2.5rem]"}
           />
           {errors?.password && (
             <p className="text-sm text-red-500">{errors?.password?.message}</p>
           )}
         </div>
         {error && <p className="my-3 text-sm text-red-500">{error}</p>}
-        <Button
-          className={"cursor-pointer my-5"}
-          type="submit"
-          disabled={!isValid || loading}
-        >
-          {loading ? <Loader2 className="animate-spin" /> : "Login"}
-        </Button>
+        <div className="w-full flex justify-center items-center my-5">
+          <Button
+            className={"cursor-pointer rounded-sm h-[2.5rem] min-w-full py-5"}
+            type="submit"
+            disabled={!isValid || loading}
+          >
+            {loading ? <Loader2 className="animate-spin" /> : "Login"}
+          </Button>
+        </div>
         <p className="text-sm">
           Don't have an account?{" "}
-          <Link to={"/signup"} className="text-black underline">
+          <Link to={"/signup"} className="text-green-500 underline">
             Signup
           </Link>{" "}
         </p>

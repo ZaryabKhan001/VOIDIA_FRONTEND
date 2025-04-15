@@ -27,7 +27,7 @@ const Header = () => {
   };
 
   return (
-    <div className="flex justify-between items-center h-[15vh] sm:h-[12vh]">
+    <div className="flex justify-between items-center h-[15vh] sm:h-[12vh] border-b border-b-slate-300 sticky top-0 left-0 bg-white">
       <div>
         <Link className="text-3xl font-bold" to={"/"}>
           VOIDIA

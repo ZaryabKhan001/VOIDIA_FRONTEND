@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const BlogCard = ({ blog }) => {
   return (
     <Link
-      className="flex flex-col justify-center items-center gap-2 p-3 border border-slate-200 rounded-md cursor-pointer"
+      className="flex flex-col justify-center items-center gap-2 p-3 border border-slate-300 rounded-md cursor-pointer hover:shadow-md transition-all duration-200"
       to={`/blog/${blog._id}`}
     >
       <div className="overflow-hidden w-full h-[13rem]">
@@ -21,10 +21,11 @@ const BlogCard = ({ blog }) => {
           {blog?.title}
         </h1>
         <div className="flex flex-col sm:flex-row items-start gap-0 w-full justify-between sm:items-center sm:gap-2">
-          <p className="text-md font-bold w-full sm:w-[30%] truncate overflow-hidden whitespace-nowrap text-ellipsis">
+          <p className="text-md font-bold w-full sm:w-[50%] truncate overflow-hidden whitespace-nowrap text-ellipsis">
+            {blog?.createdBy?.name && <span>By: </span>}
             {blog?.createdBy?.name}
           </p>
-          <p className="text-sm">{formatDate(blog?.createdAt)}</p>
+          <p className="text-sm">{formatDate(blog?.createdAt, "short")}</p>
         </div>
       </div>
     </Link>

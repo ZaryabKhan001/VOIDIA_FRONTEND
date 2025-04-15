@@ -7,7 +7,7 @@ const CommentBox = ({ comment }) => {
       <h2 className="text-md">{comment.content}</h2>
       <div className="flex flex-col justify-start items-start">
         <p className="capitalize text-sm font-bold">{comment.createdBy.name}</p>
-        <p className="text-xs">{formatDate(comment.createdAt)}</p>
+        <p className="text-xs">{formatDate(comment.createdAt, "short")}</p>
       </div>
     </div>
   );
