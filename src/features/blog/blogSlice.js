@@ -192,7 +192,7 @@ const blogSlice = createSlice({
       })
       .addCase(addComment.fulfilled, (state, action) => {
         state.loading.addComment = false;
-        state.comments.push(action.payload);
+        state.comments.unshift(action.payload);
         state.error.addComment = null;
       })
       .addCase(addComment.rejected, (state, action) => {
